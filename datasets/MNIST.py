@@ -4,9 +4,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, TensorDataset
-from torch.optim import *
-from datasets import MNIST_network
+from torch.utils.data import DataLoader
 
 class MNIST_dataset(object):
     """ Builds and fits model for MNIST dataset"""
