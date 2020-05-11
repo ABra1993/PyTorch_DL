@@ -1,21 +1,31 @@
 from datasets.MNIST import MNIST_dataset
-from datasets import Net
+from datasets import MNIST_network
 import torch
-import torchvision
 
 
 def main():
 
+    # Define params
+    batch_size_train = 64
+    batch_size_test = 128
+    train_epochs = 3
+    learning_rate = 1e-3
+    momentum = 0.9
+    visualize_training_data = False
+
     # Imports MNIST dataset
-    MNIST = MNIST_dataset(batch_size_train=64, batch_size_test=128)
+    MNIST = MNIST_dataset(batch_size_train=batch_size_train,
+                          batch_size_test=batch_size_test,
+                          train_epochs=train_epochs)
     MNIST.import_data()
 
     # Visualize training data
-    #    MNIST.visualize_training_data()
+    if visualize_training_data == True:
+        MNIST.visualize_training_data()
 
     # Initializes network
-    network = Net.Net()
-    optimizer = torch.optim.SGD(network.parameters(), lr=1e-3, momentum=0.9)
+    network = MNIST_network.Net()
+    optimizer = torch.optim.SGD(network.parameters(), lr=learning_rate, momentum=momentum)
 
     # Trains network
     network = MNIST.train(network, optimizer)

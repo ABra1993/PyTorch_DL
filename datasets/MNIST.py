@@ -3,21 +3,19 @@ import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
-import torch.nn as nn
 import torch.nn.functional as F
-import sys
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import *
-from datasets import Net
+from datasets import MNIST_network
 
 class MNIST_dataset(object):
     """ Builds and fits model for MNIST dataset"""
 
-    def __init__(self, batch_size_train, batch_size_test):
+    def __init__(self, batch_size_train, batch_size_test, train_epochs):
         self.train_data = []
         self.test_data = []
 
-        self.epoch = 3
+        self.train_epochs = train_epochs
         self.log_interval = 3
 
         self.batch_size_train = batch_size_train
@@ -26,22 +24,26 @@ class MNIST_dataset(object):
         self.train_losses = []
         self.train_counter = []
         self.test_losses = []
-        self.test_counter = []
 
     def import_data(self):
         """ Import test and training data"""
 
-        # import training dataset
-        self.train_data = DataLoader(torchvision.datasets.MNIST('MNIST/processed/training.pt', train=True, download=True,
+        # import training data
+        self.train_data = DataLoader(torchvision.datasets.MNIST('data/MNIST/processed/training.pt',
+                                                                train=True,
+                                                                download=True,
                                                                 transform=transforms.ToTensor()),
-                                     batch_size=self.batch_size_train, shuffle=False)
+                                                                batch_size=self.batch_size_train,
+                                                                shuffle=False)
 
-        #  import test dataset
-        self.test_data = DataLoader(torchvision.datasets.MNIST('MNIST/processed/test.pt', train=False, download=True,
-                                                                transform=transforms.ToTensor()),
-                                     batch_size=self.batch_size_test, shuffle=False)
+        #  import test data
+        self.test_data = DataLoader(torchvision.datasets.MNIST('data/MNIST/processed/test.pt',
+                                                               train=False,
+                                                               download=True,
+                                                               transform=transforms.ToTensor()),
+                                                               batch_size=self.batch_size_test,
+                                                               shuffle=False)
 
-        self.test_counter = [i*len(self.train_data.dataset) for i in range(self.epoch + 1)]
 
     def visualize_training_data(self):
         """ Visualize training data"""
@@ -62,11 +64,11 @@ class MNIST_dataset(object):
         print(example_data[i])
 
     def train(self, network, optimizer):
-        """ Training model"""
+        """ Training network on training data"""
 
         network.train()
 
-        for i in range(0, self.epoch):
+        for i in range(0, self.train_epochs):
             for batch_idx, (data, target) in enumerate(self.train_data):
                 optimizer.zero_grad()
                 output = network(data)
@@ -74,12 +76,12 @@ class MNIST_dataset(object):
                 loss.backward()
                 optimizer.step()
                 if batch_idx % self.log_interval == 0:
-                    print('Train Epoch: {} of {} [{}/{} ({:.0f}%)]\tloss: {:.6f}'.format(
-                        i + 1, self.epoch, batch_idx * len(data), len(self.train_data.dataset),
+                    print('Train Epoch: {} of {} [{}/{} ({:.0f}%)]\t\tloss: {:.6f}'.format(
+                        i + 1, self.train_epochs, batch_idx * len(data), len(self.train_data.dataset),
                         100. * batch_idx / len(self.train_data), loss.item()))
                 self.train_losses.append(loss.item())
                 self.train_counter.append(
-                    (batch_idx*self.batch_size_train) + ((self.epoch-1)*len(self.train_data.dataset)))
+                    (batch_idx*self.batch_size_train) + ((self.train_epochs-1)*len(self.train_data.dataset)))
 
         return network
 
@@ -92,7 +94,7 @@ class MNIST_dataset(object):
         with torch.no_grad():
             for data, target in self.test_data:
                 output = network(data)
-                test_loss += F.nll_loss(output, target, size_average=False).item()
+                test_loss += F.nll_loss(output, target, reduction='sum').item()
                 pred = output.data.max(1, keepdim=True)[1]
                 correct += pred.eq(target.data.view_as(pred)).sum()
         test_loss /= len(self.test_data.dataset)
