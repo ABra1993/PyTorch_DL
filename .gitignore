@@ -1,4 +1,4 @@
 venv/
-datasets/__pycache__/
+network_modules/__pycache__/
 .idea/
 __pycache__/

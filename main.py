@@ -1,5 +1,5 @@
-from datasets.MNIST import MNIST_dataset
-from datasets import MNIST_network
+from network_modules.MNIST import MNIST_dataset
+from network_modules import MNIST_network
 import torch
 
 
