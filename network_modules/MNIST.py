@@ -65,14 +65,14 @@ class MNIST_dataset(object):
         print(example_data[i])
 
     def show_parameters(self, network):
-        """ Prints weights and biases for every layer of the netwokr"""
+        """ Prints weights and biases for every layer of the network"""
 
         for name, param in network.named_parameters():
             if param.requires_grad:
                 print('\nParameter: {}\t ----\tSize: {}'.format(name, param.data.numpy().shape))
 
     def categorical_cross_entropy(self, output):
-        """ Computes loss as categorical cross entropy"""
+        """ Computes loss (objective function: categorical cross entropy)"""
 
 
 
@@ -124,7 +124,7 @@ class MNIST_dataset(object):
         plt.plot(self.train_losses, 'k')
         plt.title('Loss')
         plt.xlabel('Batch ID')
-        plt.ylabel('Negative log likelihood loss')
+        plt.ylabel('Loss')
         plt.show()
 
 
