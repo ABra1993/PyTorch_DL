@@ -6,12 +6,16 @@ import torch
 def main():
 
     # Define params
-    batch_size_train = 64
-    batch_size_test = 128
-    train_epochs = 3
-    learning_rate = 1e-3
-    momentum = 0.9
+    batch_size_train = 128
+    batch_size_test = 10000
+    train_epochs = 5
+    learning_rate = 1e-2
+    momentum = 0
+
+    # additional information
     visualize_training_data = False
+    show_parameters = False
+    train_network = True
 
     # Imports MNIST dataset
     MNIST = MNIST_dataset(batch_size_train=batch_size_train,
@@ -25,10 +29,15 @@ def main():
 
     # Initializes network
     network = MNIST_network.Net()
-    optimizer = torch.optim.SGD(network.parameters(), lr=learning_rate, momentum=momentum)
+    optimizer = torch.optim.RMSprop(network.parameters(), lr=learning_rate, momentum=momentum)
+
+    # Prints weights and biased
+    if show_parameters == True:
+        MNIST.show_parameters(network)
 
     # Trains network
-    network = MNIST.train(network, optimizer)
+    if train_network == True:
+        network = MNIST.train(network, optimizer)
 
     # Evaluates network
     MNIST.test(network)

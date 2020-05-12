@@ -5,6 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import sys
 
 class MNIST_dataset(object):
     """ Builds and fits model for MNIST dataset"""
@@ -30,7 +31,9 @@ class MNIST_dataset(object):
         self.train_data = DataLoader(torchvision.datasets.MNIST('data/MNIST/processed/training.pt',
                                                                 train=True,
                                                                 download=True,
-                                                                transform=transforms.ToTensor()),
+                                                                transform=transforms.Compose([
+                                                                    transforms.ToTensor(),
+                                                                    transforms.Normalize(0.1307, 0.3081)])),
                                                                 batch_size=self.batch_size_train,
                                                                 shuffle=False)
 
@@ -61,6 +64,18 @@ class MNIST_dataset(object):
 
         print(example_data[i])
 
+    def show_parameters(self, network):
+        """ Prints weights and biases for every layer of the netwokr"""
+
+        for name, param in network.named_parameters():
+            if param.requires_grad:
+                print('\nParameter: {}\t ----\tSize: {}'.format(name, param.data.numpy().shape))
+
+    def categorical_cross_entropy(self, output):
+        """ Computes loss as categorical cross entropy"""
+
+
+
     def train(self, network, optimizer):
         """ Training network on training data"""
 
@@ -70,7 +85,7 @@ class MNIST_dataset(object):
             for batch_idx, (data, target) in enumerate(self.train_data):
                 optimizer.zero_grad()
                 output = network(data)
-                loss = F.nll_loss(output, target)
+                loss = F.cross_entropy(output, target)  # categorical cross-entropy
                 loss.backward()
                 optimizer.step()
                 if batch_idx % self.log_interval == 0:
