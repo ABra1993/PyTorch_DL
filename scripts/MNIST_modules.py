@@ -6,8 +6,10 @@ import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import sys
+import math
 
-class MNIST_dataset(object):
+
+class MNIST_modules(object):
     """ Builds and fits model for MNIST dataset"""
 
     def __init__(self, batch_size_train, batch_size_test, train_epochs):
@@ -24,16 +26,24 @@ class MNIST_dataset(object):
         self.train_counter = []
         self.test_losses = []
 
+    def one_hot_encoding(self, output, target):
+        """ Returns one-hot format for target"""
+
+        target_one_hot = np.zeros((output.shape[0], output.shape[1]))
+
+        for i in range(0, output.shape[0]):
+            target_one_hot[i][target[i]] = 1
+
+        return target_one_hot
+
     def import_data(self):
-        """ Import test and training data"""
+        """ Imports test and training data"""
 
         # import training data
         self.train_data = DataLoader(torchvision.datasets.MNIST('data/MNIST/processed/training.pt',
                                                                 train=True,
                                                                 download=True,
-                                                                transform=transforms.Compose([
-                                                                    transforms.ToTensor(),
-                                                                    transforms.Normalize(0.1307, 0.3081)])),
+                                                                transform=transforms.ToTensor()),
                                                                 batch_size=self.batch_size_train,
                                                                 shuffle=False)
 
@@ -44,7 +54,6 @@ class MNIST_dataset(object):
                                                                transform=transforms.ToTensor()),
                                                                batch_size=self.batch_size_test,
                                                                shuffle=False)
-
 
     def visualize_training_data(self):
         """ Visualize training data"""
@@ -71,22 +80,45 @@ class MNIST_dataset(object):
             if param.requires_grad:
                 print('\nParameter: {}\t ----\tSize: {}'.format(name, param.data.numpy().shape))
 
-    def categorical_cross_entropy(self, output):
+    def categorical_cross_entropy(self, output, target):
         """ Computes loss (objective function: categorical cross entropy)"""
 
+        # Convert output and target tensors to numpy array
+        output_array = output.detach().numpy()
+        target_array = target.detach().numpy()
 
+        # n = output_array.shape[0]
+        # m = output_array.shape[1]
 
-    def train(self, network, optimizer):
+        n = self.batch_size_train
+        m = 10
+
+        # One-hot format for target
+        target_one_hot = self.one_hot_encoding(output_array, target_array)
+
+        for i in range(0, n):
+            for j in range(0, m):
+                output[i][j] = output[i][j].clone() * target_one_hot[i][j]
+
+        loss = torch.mean(torch.sum(output, 1))
+
+        return loss
+
+    def train(self, network, optimizer, ce_torch):
         """ Training network on training data"""
-
-        network.train()
 
         for i in range(0, self.train_epochs):
             for batch_idx, (data, target) in enumerate(self.train_data):
                 optimizer.zero_grad()
                 output = network(data)
-                loss = F.cross_entropy(output, target)  # categorical cross-entropy
+                #print(output)
+                if ce_torch == False:
+                    loss = self.categorical_cross_entropy(output, target)
+                else:
+                    loss = F.cross_entropy(output, target)
+                #print(loss)
                 loss.backward()
+                #sys.exit()
                 optimizer.step()
                 if batch_idx % self.log_interval == 0:
                     print('Train Epoch: {} of {} [{}/{} ({:.0f}%)]\t\tloss: {:.6f}'.format(
