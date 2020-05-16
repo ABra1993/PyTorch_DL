@@ -15,4 +15,4 @@ class MNIST_network(nn.Module):
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        return F.log_softmax(x, -1)
+        return F.log_softmax(x, 1)

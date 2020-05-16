@@ -5,8 +5,6 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-import sys
-import math
 
 
 class MNIST_modules(object):
@@ -87,22 +85,15 @@ class MNIST_modules(object):
         output_array = output.detach().numpy()
         target_array = target.detach().numpy()
 
-        # n = output_array.shape[0]
-        # m = output_array.shape[1]
-
-        n = self.batch_size_train
-        m = 10
-
         # One-hot format for target
         target_one_hot = self.one_hot_encoding(output_array, target_array)
 
-        for i in range(0, n):
-            for j in range(0, m):
-                output[i][j] = output[i][j].clone() * target_one_hot[i][j]
+        loss = 0
+        for i in range(0, self.batch_size_train):
+            single_loss = -np.dot(output_array[i], target_one_hot[i])
+            loss += single_loss
 
-        loss = torch.mean(torch.sum(output, 1))
-
-        return loss
+        return torch.tensor(loss, requires_grad=True)
 
     def train(self, network, optimizer, ce_torch):
         """ Training network on training data"""
@@ -111,14 +102,11 @@ class MNIST_modules(object):
             for batch_idx, (data, target) in enumerate(self.train_data):
                 optimizer.zero_grad()
                 output = network(data)
-                #print(output)
-                if ce_torch == False:
-                    loss = self.categorical_cross_entropy(output, target)
-                else:
+                if ce_torch:
                     loss = F.cross_entropy(output, target)
-                #print(loss)
+                else:
+                    loss = self.categorical_cross_entropy(output, target)
                 loss.backward()
-                #sys.exit()
                 optimizer.step()
                 if batch_idx % self.log_interval == 0:
                     print('Train Epoch: {} of {} [{}/{} ({:.0f}%)]\t\tloss: {:.6f}'.format(
@@ -149,14 +137,19 @@ class MNIST_modules(object):
             100. * correct / len(self.test_data.dataset)))
 
     def result(self):
-        """ Plots the loss of training and test data"""
+        """ Plots the loss of training data"""
 
-        plt.figure()
+        fig = plt.figure()
         plt.grid()
         plt.plot(self.train_losses, 'k')
         plt.title('Loss')
         plt.xlabel('Batch ID')
         plt.ylabel('Loss')
         plt.show()
+
+        # Saves image
+        fig.savefig("results/MNIST_train")
+
+
 
 
