@@ -5,14 +5,13 @@ import torch
 
 def main():
 
-    # Define params
+    # Defines network parameters
     batch_size_train = 128
     batch_size_test = 10000
     train_epochs = 5
     learning_rate = 1e-2
     momentum = 0
 
-    # additional information
     visualize_training_data = False
     show_parameters = False
     train_network = True
@@ -24,7 +23,7 @@ def main():
                           train_epochs=train_epochs)
     MNIST.import_data()
 
-    # Visualize training data
+    # Visualizes training data
     if visualize_training_data:
         MNIST.visualize_training_data()
 
@@ -32,7 +31,7 @@ def main():
     network = MNIST_network.MNIST_network()
     optimizer = torch.optim.RMSprop(network.parameters(), lr=learning_rate, momentum=momentum)
 
-    # Prints weights and biased
+    # Prints weights and biases
     if show_parameters:
         MNIST.show_parameters(network)
 
@@ -43,7 +42,7 @@ def main():
     # Evaluates network
     MNIST.test(network)
 
-    # Plots result of training and test data
+    # Plots results of training
     MNIST.result()
 
 
